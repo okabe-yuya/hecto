@@ -1,7 +1,5 @@
 use crossterm::event::{read, Event, Event::Key, KeyCode::Char, KeyEvent, KeyModifiers};
-use crossterm::style::Print;
-use crossterm::queue;
-use std::io::{stdout, Write};
+use std::io::Error;
 
 mod terminal;
 use terminal::Terminal;
@@ -23,20 +21,7 @@ impl Editor {
       result.unwrap();
    }
 
-   fn draw_rows() -> Result<(), std::io::Error> {
-      let height = Terminal::size()?.height;
-      for current in 0..height {
-         queue!(stdout(), Print("~"))?;
-         if current < height - 1 {
-            queue!(stdout(), Print("\r\n"))?;
-         }
-      }
-
-      stdout().flush()?;
-      Ok(())
-   }
-
-   fn repl(&mut self) -> Result<(), std::io::Error> {
+   fn repl(&mut self) -> Result<(), Error> {
       loop {
          self.refresh_screen()?;
          if self.should_quit {
@@ -63,13 +48,29 @@ impl Editor {
       }
    }
 
-   fn refresh_screen(&self) -> Result<(), std::io::Error> {
+   fn refresh_screen(&self) -> Result<(), Error> {
+      Terminal::hide_cursor()?;
       if self.should_quit {
          Terminal::clear_screen()?;
-         print!("Goodbye.\r\n");
+         Terminal::print("Goodbye.\r\n")?;
       } else {
          Self::draw_rows()?;
-         Terminal::move_cursor_to(&Position { x: 0, y: 0 })?;
+         Terminal::move_cursor_to(Position{x:0, y:0})?;
+      }
+
+      Terminal::show_cursor()?;
+      Terminal::execute()?;
+      Ok(())
+   }
+
+   fn draw_rows() -> Result<(), Error> {
+      let height = Terminal::size()?.height;
+      for current in 0..height {
+         Terminal::clear_line()?;
+         Terminal::print("~")?;
+         if current < height - 1 {
+            Terminal::print("\r\n")?;
+         }
       }
 
       Ok(())

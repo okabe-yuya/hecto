@@ -5,6 +5,9 @@ mod terminal;
 use terminal::Terminal;
 use terminal::Position;
 
+const NAME: &str = env!("CARGO_PKG_NAME");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub struct Editor {
    should_quit: bool,
 }
@@ -55,7 +58,7 @@ impl Editor {
          Terminal::print("Goodbye.\r\n")?;
       } else {
          Self::draw_rows()?;
-         Terminal::move_cursor_to(Position{x:0, y:0})?;
+         Terminal::move_cursor_to(Position{ x: 0, y: 0 })?;
       }
 
       Terminal::show_cursor()?;
@@ -67,11 +70,40 @@ impl Editor {
       let height = Terminal::size()?.height;
       for current in 0..height {
          Terminal::clear_line()?;
-         Terminal::print("~")?;
-         if current < height - 1 {
+         // we allow this since we don't care if our welcome message is put _exactly_ in the middle.
+         // it's allowed to be a bit up or down
+         #[allow(clippy::integer_division)]
+         if current == height / 2 {
+            Self::draw_welcoome_message()?;
+         } else {
+            Self::draw_empty_row()?;
+         }
+         if current.saturating_add(1) < height {
             Terminal::print("\r\n")?;
          }
       }
+
+      Ok(())
+   }
+
+   fn draw_empty_row() -> Result<(), Error> {
+      Terminal::print("~")?;
+      Ok(())
+   }
+
+   fn draw_welcoome_message() -> Result<(), Error> {
+      let mut welcome_message = format!("{NAME} editor -- veresion {VERSION}");
+      let width = Terminal::size()?.width;
+      let len = welcome_message.len();
+      // we allow this since we don't care if our welcome message is put _exactly_ in the middle.
+      // it's allowed to be a bit to the left or right.
+      #[allow(clippy::integer_division)]
+      let padding = (width.saturating_sub(len)) / 2;
+      let spaces = " ".repeat(padding.saturating_sub(1));
+
+      welcome_message = format!("~{spaces}{welcome_message}");
+      welcome_message.truncate(width);
+      Terminal::print(welcome_message)?;
 
       Ok(())
    }

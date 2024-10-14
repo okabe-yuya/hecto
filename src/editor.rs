@@ -22,6 +22,7 @@ struct Location {
 pub struct Editor {
    should_quit: bool,
    location: Location, 
+   view: View,
 }
 
 impl Editor {
@@ -107,14 +108,14 @@ impl Editor {
       Ok(())
    }
 
-   fn refresh_screen(&self) -> Result<(), Error> {
+   fn refresh_screen(&mut self) -> Result<(), Error> {
       Terminal::hide_caret()?;
       Terminal::move_caret_to(Position::default())?;
       if self.should_quit {
          Terminal::clear_screen()?;
          Terminal::print("Goodbye.\r\n")?;
       } else {
-         View::render()?;
+         self.view.render()?;
          Terminal::move_caret_to(Position {
             col: self.location.x,
             row: self.location.y,

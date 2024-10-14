@@ -1,4 +1,3 @@
-use core::fmt::Display;
 use crossterm::cursor::{MoveTo, Hide, Show};
 use crossterm::style::Print;
 use crossterm::{queue, Command};
@@ -73,7 +72,7 @@ impl Terminal {
       Ok(())
    }
 
-   pub fn print<T: Display>(string: T) -> Result<(), Error> {
+   pub fn print(string: &str) -> Result<(), Error> {
       Self::queue_command(Print(string))?;
       Ok(())
    }
